@@ -16,8 +16,16 @@ def export_fbx():
     '''
         Export the item
     '''
-    # Export the object
+    # Get the export filename
     file_path = os.path.join(let_save_to.text(), let_name.text() + '.fbx')
+
+    # Check if the file exists already
+    if os.path.isfile(file_path):
+        result = cmds.confirmDialog( title='File Already Exists', message='Do you want to overwrite the file?', button=['Yes','No'], defaultButton='Yes', cancelButton='No', dismissString='No' )
+        if result == 'No':
+            return
+
+    # Export the object
     mel.eval('FBXExport -f "{}" -s'.format(file_path))
     cmds.confirmDialog(title='Success', message='Exported successfully')
 
