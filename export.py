@@ -1,5 +1,7 @@
 import sys
+import os
 from maya import cmds
+from maya import mel
 from PySide2 import QtCore, QtGui, QtWidgets
 
 ################################################################################
@@ -14,7 +16,10 @@ def export_fbx():
     '''
         Export the item
     '''
-    pass
+    # Export the object
+    file_path = os.path.join(let_save_to.text(), let_name.text() + '.fbx')
+    mel.eval('FBXExport -f "{}" -s'.format(file_path))
+    cmds.confirmDialog(title='Success', message='Exported successfully')
 
 def move_to_zero():
     '''
@@ -39,6 +44,9 @@ def move_to_zero():
     # Delete the original group
     cmds.delete(world_zero)
 
+    # Select the object again
+    cmds.select(selection)
+
 ################################################################################
 ##### BUILD QT #####
 
@@ -48,6 +56,7 @@ let_name = QtWidgets.QLineEdit()
 lbl_save_to = QtWidgets.QLabel('Save to')
 let_save_to = QtWidgets.QLineEdit(SAVE_TO)
 cbx_move_origin = QtWidgets.QCheckBox('Change origin')
+cbx_move_origin.setChecked(True)
 btn_move = QtWidgets.QPushButton('Move to world zero')
 btn_move.clicked.connect(move_to_zero)
 btn_export = QtWidgets.QPushButton('Export FBX')
