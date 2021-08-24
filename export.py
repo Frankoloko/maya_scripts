@@ -46,6 +46,25 @@ def move_to_zero():
         bottom = [(bbox[0] + bbox[3])/2, bbox[1], (bbox[2] + bbox[5])/2]
         cmds.xform(selection, piv=bottom, ws=True)
 
+    if cbx_remove_shading.isChecked():
+        # Select the object again
+        cmds.select(selection)
+
+        # Remove all the shading groups off the object
+        nodes = cmds.ls(sl=True, dag=True, s=True)
+        shading_engines = cmds.listConnections(nodes , type="shadingEngine")
+        materials = cmds.ls(cmds.listConnections(shading_engines), materials=True)
+
+        # Filter out unique items from lists
+        materials = list(set(materials))
+        shading_engines = list(set(shading_engines))
+
+        # Delete everything
+        for item in materials:
+            cmds.delete(item)
+        for item in shading_engines:
+            cmds.delete(item)
+
     # Move the object to world zero
     cmds.matchTransform(selection, world_zero, position=True)
 
@@ -65,6 +84,8 @@ lbl_save_to = QtWidgets.QLabel('Save to')
 let_save_to = QtWidgets.QLineEdit(SAVE_TO)
 cbx_move_origin = QtWidgets.QCheckBox('Change origin')
 cbx_move_origin.setChecked(True)
+cbx_remove_shading = QtWidgets.QCheckBox('Remove shading groups')
+cbx_remove_shading.setChecked(True)
 btn_move = QtWidgets.QPushButton('Move to world zero')
 btn_move.clicked.connect(move_to_zero)
 btn_export = QtWidgets.QPushButton('Export FBX')
@@ -73,6 +94,7 @@ btn_export.clicked.connect(export_fbx)
 # Create layout
 layout = QtWidgets.QVBoxLayout()
 layout.addWidget(cbx_move_origin)
+layout.addWidget(cbx_remove_shading)
 layout.addWidget(btn_move)
 layout.addWidget(lbl_name)
 layout.addWidget(let_name)
