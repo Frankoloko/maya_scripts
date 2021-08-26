@@ -12,6 +12,28 @@ SAVE_TO = '/Users/francois/Desktop/tester'
 ################################################################################
 ##### FUNCTIONS #####
 
+def import_folder():
+    '''
+        This will import FBX items from a folder
+    '''
+    folder_path = let_save_to.text()
+
+    if cbx_import_walk.isChecked():
+        # Walk
+        for base, folders, files in os.walk(folder_path):
+            for file in files:
+                if '.fbx' not in file and '.FBX' not in file:
+                    continue
+                file_path = os.path.join(base, file)
+                cmds.file(file_path, i=True)
+    else:
+        # Top folder only
+        for file in os.listdir(folder_path):
+            if '.fbx' not in file and '.FBX' not in file:
+                continue
+            file_path = os.path.join(folder_path, file)
+            cmds.file(file_path, i=True)
+
 def fix_folder():
     '''
         This will run through a folder, import each asset, fix it, and export it.
@@ -130,6 +152,10 @@ btn_export = QtWidgets.QPushButton('Export FBX')
 btn_export.clicked.connect(export_fbx)
 btn_fix_folder = QtWidgets.QPushButton('Fix folder')
 btn_fix_folder.clicked.connect(fix_folder)
+cbx_import_walk = QtWidgets.QCheckBox('Walk through all folders')
+cbx_import_walk.setChecked(True)
+btn_import_folder = QtWidgets.QPushButton('Import folder')
+btn_import_folder.clicked.connect(import_folder)
 
 # Create layout
 layout = QtWidgets.QVBoxLayout()
@@ -142,6 +168,8 @@ layout.addWidget(lbl_save_to)
 layout.addWidget(let_save_to)
 layout.addWidget(btn_export)
 layout.addWidget(btn_fix_folder)
+layout.addWidget(cbx_import_walk)
+layout.addWidget(btn_import_folder)
 
 # Create the window
 window = QtWidgets.QWidget()
