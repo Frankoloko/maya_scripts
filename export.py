@@ -7,10 +7,48 @@ from PySide2 import QtCore, QtGui, QtWidgets
 ################################################################################
 ##### DEFAULT VALUES #####
 
-SAVE_TO = '/Users/francois/Desktop/Test'
+SAVE_TO = '/Users/francois/Desktop/tester'
 
 ################################################################################
 ##### FUNCTIONS #####
+
+def fix_folder():
+    '''
+        This will run through a folder, import each asset, fix it, and export it.
+    '''
+    folder_path = let_save_to.text()
+
+    for base, folders, files in os.walk(folder_path):
+        for file in files:
+            if '.fbx' not in file and '.FBX' not in file:
+                continue
+
+            print('Doing: {}'.format(file))
+
+            cmds.file(force=True, new=True)
+
+            file_path = os.path.join(base, file)
+
+            # Import the file
+            imported_nodes = cmds.file(file_path, i=True, returnNewNodes=True)
+
+            # Get the parent node
+            parent_node = None
+            for node_name in imported_nodes:
+                if node_name.count('|') == 1:
+                    parent_node = node_name
+                    break
+
+            # Select the imported item
+            cmds.select(parent_node)
+
+            # Fix the file
+            fix_model()
+            
+            # Export the object
+            mel.eval('FBXExport -f "{}" -s'.format(file_path))
+
+    print('FINISHED')
 
 def export_fbx():
     '''
@@ -29,9 +67,9 @@ def export_fbx():
     mel.eval('FBXExport -f "{}" -s'.format(file_path))
     cmds.confirmDialog(title='Success', message='Exported successfully')
 
-def move_to_zero():
+def fix_model():
     '''
-        This moves the object to world zero
+        This will run many function to clean and fix the model
     '''
     # Get the selected item (do this before creating a group because
     # creating a group makes it automatically selected as well)
@@ -86,25 +124,28 @@ cbx_move_origin = QtWidgets.QCheckBox('Change origin')
 cbx_move_origin.setChecked(True)
 cbx_remove_shading = QtWidgets.QCheckBox('Remove shading groups')
 cbx_remove_shading.setChecked(True)
-btn_move = QtWidgets.QPushButton('Move to world zero')
-btn_move.clicked.connect(move_to_zero)
+btn_fix = QtWidgets.QPushButton('Fix model')
+btn_fix.clicked.connect(fix_model)
 btn_export = QtWidgets.QPushButton('Export FBX')
 btn_export.clicked.connect(export_fbx)
+btn_fix_folder = QtWidgets.QPushButton('Fix folder')
+btn_fix_folder.clicked.connect(fix_folder)
 
 # Create layout
 layout = QtWidgets.QVBoxLayout()
 layout.addWidget(cbx_move_origin)
 layout.addWidget(cbx_remove_shading)
-layout.addWidget(btn_move)
+layout.addWidget(btn_fix)
 layout.addWidget(lbl_name)
 layout.addWidget(let_name)
 layout.addWidget(lbl_save_to)
 layout.addWidget(let_save_to)
 layout.addWidget(btn_export)
+layout.addWidget(btn_fix_folder)
 
 # Create the window
 window = QtWidgets.QWidget()
 window.setWindowFlags(QtCore.Qt.Tool)
-# window.resize(800, 600) # If you want this
+window.resize(300, 200)
 window.setLayout(layout)
 window.show()
