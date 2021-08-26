@@ -112,18 +112,20 @@ def fix_model():
 
         # Remove all the shading groups off the object
         nodes = cmds.ls(sl=True, dag=True, s=True)
-        shading_engines = cmds.listConnections(nodes , type="shadingEngine")
-        materials = cmds.ls(cmds.listConnections(shading_engines), materials=True)
+        if nodes:
+            shading_engines = cmds.listConnections(nodes , type="shadingEngine")
+            if shading_engines:
+                materials = cmds.ls(cmds.listConnections(shading_engines), materials=True)
+                if materials:
+                    # Filter out unique items from lists
+                    materials = list(set(materials))
+                    shading_engines = list(set(shading_engines))
 
-        # Filter out unique items from lists
-        materials = list(set(materials))
-        shading_engines = list(set(shading_engines))
-
-        # Delete everything
-        for item in materials:
-            cmds.delete(item)
-        for item in shading_engines:
-            cmds.delete(item)
+                    # Delete everything
+                    for item in materials:
+                        cmds.delete(item)
+                    for item in shading_engines:
+                        cmds.delete(item)
 
     # Move the object to world zero
     cmds.matchTransform(selection, world_zero, position=True)
