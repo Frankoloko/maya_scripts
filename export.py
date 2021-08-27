@@ -7,7 +7,7 @@ from PySide2 import QtCore, QtGui, QtWidgets
 ################################################################################
 ##### DEFAULT VALUES #####
 
-SAVE_TO = '/Users/francois/Desktop/tester'
+FOLDER_DEFAULT = '/Users/francois/Desktop/tester'
 
 ################################################################################
 ##### FUNCTIONS #####
@@ -16,7 +16,7 @@ def import_folder():
     '''
         This will import FBX items from a folder
     '''
-    folder_path = let_save_to.text()
+    folder_path = let_folder.text()
 
     if cbx_import_walk.isChecked():
         # Walk
@@ -38,7 +38,7 @@ def fix_folder():
     '''
         This will run through a folder, import each asset, fix it, and export it.
     '''
-    folder_path = let_save_to.text()
+    folder_path = let_folder.text()
 
     for base, folders, files in os.walk(folder_path):
         for file in files:
@@ -77,17 +77,34 @@ def export_fbx():
         Export the item
     '''
     # Get the export filename
-    file_path = os.path.join(let_save_to.text(), let_name.text() + '.fbx')
+    file_path = os.path.join(let_folder.text(), let_name.text() + '.fbx')
 
-    # Check if the file exists already
     if os.path.isfile(file_path):
-        result = cmds.confirmDialog( title='File Already Exists', message='Do you want to overwrite the file?', button=['Yes','No'], defaultButton='Yes', cancelButton='No', dismissString='No' )
-        if result == 'No':
-            return
+        file_exists = True
+    else:
+        file_exists = False
+
+    if cbx_increment.isChecked():
+        # Increment the filename
+        if file_exists:
+            while os.path.isfile(file_path):
+                index = int(file_path.split('_')[-1].split('.')[0])
+                file_path = file_path.replace('_{}'.format(index), '_{}'.format(index + 1))
+    else:
+        # Check if the file exists already
+        if file_exists:
+            result = cmds.confirmDialog( title='File Already Exists', message='Do you want to overwrite the file?', button=['Yes','No'], defaultButton='Yes', cancelButton='No', dismissString='No' )
+            if result == 'No':
+                return
 
     # Export the object
     mel.eval('FBXExport -f "{}" -s'.format(file_path))
     cmds.confirmDialog(title='Success', message='Exported successfully')
+
+    # Delete after export
+    if cbx_delete_export.isChecked():
+        selection = cmds.ls(selection=True)
+        cmds.delete(selection)
 
 def fix_model():
     '''
@@ -142,14 +159,18 @@ def fix_model():
 # Create basic controls
 lbl_name = QtWidgets.QLabel('Item name')
 let_name = QtWidgets.QLineEdit()
-lbl_save_to = QtWidgets.QLabel('Save to')
-let_save_to = QtWidgets.QLineEdit(SAVE_TO)
+lbl_folder = QtWidgets.QLabel('Folder')
+let_folder = QtWidgets.QLineEdit(FOLDER_DEFAULT)
 cbx_move_origin = QtWidgets.QCheckBox('Change origin')
 cbx_move_origin.setChecked(True)
 cbx_remove_shading = QtWidgets.QCheckBox('Remove shading groups')
 cbx_remove_shading.setChecked(True)
 btn_fix = QtWidgets.QPushButton('Fix model')
 btn_fix.clicked.connect(fix_model)
+cbx_increment = QtWidgets.QCheckBox('Increment automatically')
+cbx_increment.setChecked(True)
+cbx_delete_export = QtWidgets.QCheckBox('Delete after export')
+cbx_delete_export.setChecked(True)
 btn_export = QtWidgets.QPushButton('Export FBX')
 btn_export.clicked.connect(export_fbx)
 btn_fix_folder = QtWidgets.QPushButton('Fix folder')
@@ -166,8 +187,10 @@ layout.addWidget(cbx_remove_shading)
 layout.addWidget(btn_fix)
 layout.addWidget(lbl_name)
 layout.addWidget(let_name)
-layout.addWidget(lbl_save_to)
-layout.addWidget(let_save_to)
+layout.addWidget(lbl_folder)
+layout.addWidget(let_folder)
+layout.addWidget(cbx_increment)
+layout.addWidget(cbx_delete_export)
 layout.addWidget(btn_export)
 layout.addWidget(btn_fix_folder)
 layout.addWidget(cbx_import_walk)
